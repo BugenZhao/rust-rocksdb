@@ -16,7 +16,7 @@ mod util;
 
 use pretty_assertions::assert_eq;
 
-use rocksdb::{Error, IteratorMode, Options, ReadOptions, WriteBatch, DB};
+use rocksdb::{IteratorMode, Options, ReadOptions, WriteBatch, DB};
 use util::DBPath;
 
 #[test]
@@ -33,7 +33,8 @@ fn timestamp_works() {
         let mut batch = WriteBatch::default();
         batch.put_cf_with_ts(cf, b"k1", b"v1-1", 1);
         batch.put_cf_with_ts(cf, b"k1", b"v1-2", 2);
-        batch.delete_cf_with_ts(cf, b"k1", 3);
+        batch.put_cf_with_ts(cf, b"k1", b"v1-256", 256);
+        batch.delete_cf_with_ts(cf, b"k1", 257);
 
         db.write(batch).unwrap();
 
@@ -46,7 +47,8 @@ fn timestamp_works() {
         assert_eq!(get_with_timestamp(0), None);
         assert_eq!(get_with_timestamp(1), Some(b"v1-1".to_vec()));
         assert_eq!(get_with_timestamp(2), Some(b"v1-2".to_vec()));
-        assert_eq!(get_with_timestamp(3), None);
+        assert_eq!(get_with_timestamp(256), Some(b"v1-256".to_vec()));
+        assert_eq!(get_with_timestamp(257), None);
     }
 }
 

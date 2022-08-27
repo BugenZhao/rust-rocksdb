@@ -3366,7 +3366,7 @@ impl ReadOptions {
     }
 
     pub fn set_timestamp(&mut self, timestamp: Option<u64>) {
-        let timestamp = timestamp.map(|ts| Box::new(ts.to_be_bytes()));
+        let timestamp = timestamp.map(|ts| Box::new(ts.to_ne_bytes()));
         let (ptr, len) = if let Some(ref timestamp) = timestamp {
             (timestamp.as_ptr() as *const c_char, timestamp.len())
         } else if self.timestamp.is_some() {

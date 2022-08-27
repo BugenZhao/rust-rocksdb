@@ -176,7 +176,7 @@ impl<const TRANSACTION: bool> WriteBatchWithTransaction<TRANSACTION> {
         K: AsRef<[u8]>,
         V: AsRef<[u8]>,
     {
-        let timestamp = Box::new(timestamp.to_be_bytes());
+        let timestamp = Box::new(timestamp.to_ne_bytes());
         let key = key.as_ref();
         let value = value.as_ref();
 
@@ -265,7 +265,7 @@ impl<const TRANSACTION: bool> WriteBatchWithTransaction<TRANSACTION> {
         key: K,
         timestamp: u64,
     ) {
-        let timestamp = Box::new(timestamp.to_be_bytes());
+        let timestamp = Box::new(timestamp.to_ne_bytes());
         let key = key.as_ref();
 
         unsafe {

@@ -122,7 +122,7 @@ impl<const TRANSACTION: bool> WriteBatchWithTransaction<TRANSACTION> {
             );
             // we must manually set the raw box free since there is no
             // associated "destroy" callback for this object
-            Box::from_raw(state);
+            let _ = Box::from_raw(state);
         }
     }
 

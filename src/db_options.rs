@@ -338,6 +338,7 @@ pub struct ReadOptions {
     pub(crate) inner: *mut ffi::rocksdb_readoptions_t,
     iterate_upper_bound: Option<Vec<u8>>,
     iterate_lower_bound: Option<Vec<u8>>,
+    timestamp: Option<Box<[u8; 8]>>,
 }
 
 /// Configuration of cuckoo-based storage.
@@ -1407,6 +1408,12 @@ impl Options {
                 Some(comparator::name_callback),
             );
             ffi::rocksdb_options_set_comparator(self.inner, cmp);
+        }
+    }
+
+    pub fn set_comparator_with_u64_ts(&mut self) {
+        unsafe {
+            ffi::rocksdb_options_set_comparator_with_u64_ts(self.inner);
         }
     }
 
@@ -3358,6 +3365,21 @@ impl ReadOptions {
         self.set_upper_bound_impl(upper);
     }
 
+    pub fn set_timestamp(&mut self, timestamp: Option<u64>) {
+        let timestamp = timestamp.map(|ts| Box::new(ts.to_be_bytes()));
+        let (ptr, len) = if let Some(ref timestamp) = timestamp {
+            (timestamp.as_ptr() as *const c_char, timestamp.len())
+        } else if self.timestamp.is_some() {
+            (std::ptr::null(), 0)
+        } else {
+            return;
+        };
+        self.timestamp = timestamp;
+        unsafe {
+            ffi::rocksdb_readoptions_set_timestamp(self.inner, ptr, len);
+        }
+    }
+
     fn set_lower_bound_impl(&mut self, bound: Option<Vec<u8>>) {
         let (ptr, len) = if let Some(ref bound) = bound {
             (bound.as_ptr() as *const c_char, bound.len())
@@ -3517,6 +3539,7 @@ impl Default for ReadOptions {
                 inner: ffi::rocksdb_readoptions_create(),
                 iterate_upper_bound: None,
                 iterate_lower_bound: None,
+                timestamp: None,
             }
         }
     }

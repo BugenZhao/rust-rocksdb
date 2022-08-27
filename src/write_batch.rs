@@ -166,6 +166,34 @@ impl<const TRANSACTION: bool> WriteBatchWithTransaction<TRANSACTION> {
         }
     }
 
+    pub fn put_cf_with_ts<K, V>(
+        &mut self,
+        cf: &impl AsColumnFamilyRef,
+        key: K,
+        value: V,
+        timestamp: u64,
+    ) where
+        K: AsRef<[u8]>,
+        V: AsRef<[u8]>,
+    {
+        let timestamp = Box::new(timestamp.to_be_bytes());
+        let key = key.as_ref();
+        let value = value.as_ref();
+
+        unsafe {
+            ffi::rocksdb_writebatch_put_cf_with_ts(
+                self.inner,
+                cf.inner(),
+                key.as_ptr() as *const c_char,
+                key.len() as size_t,
+                timestamp.as_ptr() as *const c_char,
+                timestamp.len() as size_t,
+                value.as_ptr() as *const c_char,
+                value.len() as size_t,
+            );
+        }
+    }
+
     pub fn merge<K, V>(&mut self, key: K, value: V)
     where
         K: AsRef<[u8]>,
@@ -227,6 +255,27 @@ impl<const TRANSACTION: bool> WriteBatchWithTransaction<TRANSACTION> {
                 cf.inner(),
                 key.as_ptr() as *const c_char,
                 key.len() as size_t,
+            );
+        }
+    }
+
+    pub fn delete_cf_with_ts<K: AsRef<[u8]>>(
+        &mut self,
+        cf: &impl AsColumnFamilyRef,
+        key: K,
+        timestamp: u64,
+    ) {
+        let timestamp = Box::new(timestamp.to_be_bytes());
+        let key = key.as_ref();
+
+        unsafe {
+            ffi::rocksdb_writebatch_delete_cf_with_ts(
+                self.inner,
+                cf.inner(),
+                key.as_ptr() as *const c_char,
+                key.len() as size_t,
+                timestamp.as_ptr() as *const c_char,
+                timestamp.len() as size_t,
             );
         }
     }
